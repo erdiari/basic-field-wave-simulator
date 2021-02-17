@@ -8,8 +8,8 @@ void test(){
   Space.add_div_source(2, 5, 2);
   Space.add_div_source(8, 5, 2);
   // Space.add_curl_source(75, 50, 2);
-  // Space.get_changefield().GetVectorLenght();
-  draw_space(Space);
+  Space.get_changefield().AreaPrint();
+  Space.get_changefield().PrintVectorLenght();
 }
 
 int main(){

@@ -4,17 +4,42 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream> // TODO added as debug tool will be deleted when finished.
+#include <valarray>
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                  Classes                                  //
 ///////////////////////////////////////////////////////////////////////////////
 // TODO Write comments. EVERYWHERE!
 
+// emulated 2D array.
+// class Array2d{
+// private:
+// public:
+//   int w;
+//   int h;
+//   std::valarray<std::valarray<double>> array;
+//   Array2d(){};
+//   Array2d(int width, int height){
+//     w= width;
+//     h=height;
+//     // std::valarray<std::valarray<double>> array(w);
+//     array = 0;
+//   }
+//   double get(int i, int j) {return array[index(i,j)];}; // calculations are done so that 1d indexing becomes equal to 2d indexing.
+//   int set(int i, int j, double val) {
+//     const int k = index(i,j);
+//     array[k] = val;
+//     return EXIT_SUCCESS;
+//   };
+// };
+
 class VectorArea2D{
   // TODO replace field_arr with valarray at some point.
-public : int w; // Width of area
-  int h; // Height of area
+public :
+  unsigned int w;
+  unsigned int h;
   float*** field_arr; // VectorArea array
+  void FillVal(float x_bias, float y_bias);
   void initialize(int width, int height){
     w = width;
     h = height;
@@ -27,11 +52,11 @@ public : int w; // Width of area
     };
   };
   VectorArea2D(int width, int height) {initialize(width,height);};
-  void FillVal(float x_bias, float y_bias);
   void AreaPrint();
-  double ** GetVectorLenght(); //FIXME segmentation error.
-  void AreaLenghtPrint(); //FIXME segmentation error
+  // void AreaLenghtPrint(); //FIXME segmentation error
+  std::valarray<double> GetVectorLenght();
   void PrintVectorLenght();
+  // float GetValue(int i, int j, int d) const {return field_arr[i][j][d];};
 };
 
 class Source{
@@ -88,11 +113,12 @@ public:
 void VectorArea2D::AreaPrint() {
   std::cout << w << "x" << h << std::endl;
   for (int i = 0; i < w; i++) {
-      for (int j = 0; j < h; j++) {
-        std::cout << "(" << field_arr[i][j][0] << "," << field_arr[i][j][1] << ") ";
-      };
-      std::cout << ' ' << std::endl;
+    for (int j = 0; j < h; j++) {
+      std::cout << "(" << field_arr[i][j][0] << "," << field_arr[i][j][1]
+                << ") ";
     };
+    std::cout << ' ' << std::endl;
+  };
 };
 
 void VectorArea2D::FillVal(float x, float y) {
@@ -104,27 +130,21 @@ void VectorArea2D::FillVal(float x, float y) {
   };
 };
 
-double** VectorArea2D::GetVectorLenght(){
-  double **vec_len;
-  *vec_len = new double[w];
-  for (int i = 0; i < w; i++) {
-    vec_len[i] = new double[h];
-  };
-  for (int i=0; i < w; ++i) {
+std::valarray<double> VectorArea2D::GetVectorLenght(){
+  std::valarray<double> vec_len(w*h);
+  for (int i = 0; i < w; ++i) {
     for (int j = 0; j < h; ++j) {
-      vec_len[i][j] = sqrt(pow(field_arr[i][j][0], 2) + pow(field_arr[i][j][1], 2));
+      vec_len[i*w+j] = sqrt((double)(pow(field_arr[i][j][0], 2) + pow(field_arr[i][j][1], 2)));
     };
   };
   return vec_len;
 };
 
 void VectorArea2D::PrintVectorLenght(){
-  double** vec_len;
-  vec_len = GetVectorLenght();
+  std::valarray<double> vec_len = GetVectorLenght();
   for (int i = 0; i < w; i++) {
     for (int j = 0; j < h; j++) {
-      // std::cout << " "<< i << "," << j << " ";
-      std::cout << "()" << vec_len[i][j] << " ";
+      std::cout << "(" << vec_len[i*w +j] << ") ";
     };
     std::cout << "" << std::endl;
   };
