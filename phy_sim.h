@@ -53,26 +53,33 @@ public :
   };
   VectorArea2D(int width, int height) {initialize(width,height);};
   void AreaPrint();
+  // float** &operator[](int i) { return field_arr[i]; };
   // void AreaLenghtPrint(); //FIXME segmentation error
   std::valarray<double> GetVectorLenght();
   void PrintVectorLenght();
-  // float GetValue(int i, int j, int d) const {return field_arr[i][j][d];};
+  float GetValue(int i, int j, int d) const {return field_arr[i][j][d];};
 };
 
 class Source{
 private:
   int n;
 public:
-  int x,y;
+  int x,y; // Positional arguments
   float pow_coeff;
-  bool is_perp = false;
-  // Source(){};
-  void initialize(int x_pos, int y_pos, float power,bool i_perp, float space_coeff, int ooepsilon) {
+  bool is_perp;
+  // ~Source(){};
+  // Source(int x_pos, int y_pos, float power, bool i_perp, float space_coeff,
+  //        int ooepsilon) {
+  //   initialize(x_pos, y_pos, power, i_perp, space_coeff, ooepsilon);
+  // };
+  void initialize(int x_pos, int y_pos, float power,
+                  bool i_perp, float space_coeff,
+                  int ooepsilon) {
     x = x_pos;
     y = y_pos;
     pow_coeff = power;
     is_perp = i_perp;
-    n = ooepsilon * sqrt(power * space_coeff); // Number of points to calculate
+    n = ooepsilon * sqrt(fabs(power) * space_coeff); // Number of points to calculate
   };
   void calculate_effect(VectorArea2D area, float space_coeff);
 };
@@ -157,34 +164,57 @@ void Source::calculate_effect(VectorArea2D area, float space_coeff) {
   const float max = space_coeff * pow_coeff; // Maximum it can be.
   // std::cout << max << std::endl;
   for (int r = 1; r <= n; r++) {   // we don't calculate r=0
-    for (int k = 1; k <= r; k++) { // we also skip one axis since skipped axis
+    for (int k = 0; k <= r; k++) { // we also skip one axis since skipped axis
                                    // will be calculated by rotation.
-      const float f = max / pow(r, 2);
-      const float cos = k / float(r);
-      const float sin = (r - k) / float(r);
-      const float f_x = cos * f;
-      const float f_y = sin * f;
-      for (int xp = 1; xp > -2; xp -= 2) {
-        for (int yp = 1; yp > -2; yp -= 2) {
-          int x_pos = x + xp * k;
-          int y_pos = y + yp * abs(r - k);
-          // rotate 90 degrees. Kinda  lame but i don't want to spend mode time
-          // on this.
-          int xxp;
-          int yyp;
-          if (is_perp) {
-            if (xp == yp) {xxp = -xp; yyp = yp;}
-            else {yyp = -yp; xxp = xp;};
-          } else {
-            xxp = xp;
-            yyp = yp;
+      const float f = max / pow(r, 2); // f value to 
+      const float _cos = k / (float) r; // cos value
+      const float _sin = (r - k) / (float) r; // sin value
+
+      float f_x = f * _cos; // X component of function.
+      float f_y = f * _sin; // Y component of the function.
+      // rotate 90 degrees. Kinda  lame but i don't want to spend mode time
+      // on this.
+      if (is_perp) {
+        float holder = f_x;
+        f_x = f_y;
+        f_y = -holder;
+      };
+      const int x_pos_off = k;       // x position offset.
+      const int y_pos_off = (r - k); // y position offset.
+      if (x_pos_off == 0){
+        const int yp_pos = y + y_pos_off;
+        if (yp_pos < area.h) {
+          area.field_arr[x][yp_pos][0] += f_x;
+          area.field_arr[x][yp_pos][1] += f_y;
+        };
+        const int yn_pos = y - y_pos_off;
+        if ( yn_pos >= 0){
+          area.field_arr[x][yn_pos][0] -= f_x;
+          area.field_arr[x][yn_pos][1] -= f_y;
+        };
+      } else if (y_pos_off == 0) {
+          const int xp_pos = x + x_pos_off;
+          if (xp_pos < area.w){
+            area.field_arr[xp_pos][y][0] += f_x;
+            area.field_arr[xp_pos][y][1] += f_y;
           };
-          if (x_pos >= 0 && y_pos >= 0 && x_pos < area.w && y_pos < area.h){
-            area.field_arr[x_pos][y_pos][0] += f_x * xxp;
-            area.field_arr[x_pos][y_pos][1] += f_y * yyp;
+          const int xn_pos = x - x_pos_off;
+          if (xn_pos >= 0) {
+            area.field_arr[xn_pos][y][0] -= f_x;
+            area.field_arr[xn_pos][y][1] -= f_y;
+          };
+      } else {
+          for (int v1 = 1; v1 > -2; v1 -= 2) {
+            for (int v2 = 1; v2 > -2; v2 -= 2) {
+              int x_pos = v1 * x_pos_off + x;
+              int y_pos = v2 * y_pos_off + y;
+              if (x_pos >= 0 && x_pos < area.w && y_pos >= 0 && y_pos < area.h){
+                area.field_arr[x_pos][y_pos][0] += f_x * v1;
+                area.field_arr[x_pos][y_pos][1] += f_y * v2;
+              }
+            };
           };
         };
-      };
     };
   };
 };
