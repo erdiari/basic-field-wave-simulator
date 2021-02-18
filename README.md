@@ -1,6 +1,6 @@
 # Basic Field Wave Simulator
 
-A basic field wave generator i wrote to learn sdl and oop on cpp. Written in two days while slearning how stuff works. Handle with care. 
+A basic field wave generator i wrote to learn sdl and oop on cpp. Written in two days while learning how stuff works. Handle with care. 
 
 Scene can be specified with .cpp files. 
 
