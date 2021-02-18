@@ -9,32 +9,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 //                                  Classes                                  //
 ///////////////////////////////////////////////////////////////////////////////
-// TODO Write comments. EVERYWHERE!
-
-// emulated 2D array.
-// class Array2d{
-// private:
-// public:
-//   int w;
-//   int h;
-//   std::valarray<std::valarray<double>> array;
-//   Array2d(){};
-//   Array2d(int width, int height){
-//     w= width;
-//     h=height;
-//     // std::valarray<std::valarray<double>> array(w);
-//     array = 0;
-//   }
-//   double get(int i, int j) {return array[index(i,j)];}; // calculations are done so that 1d indexing becomes equal to 2d indexing.
-//   int set(int i, int j, double val) {
-//     const int k = index(i,j);
-//     array[k] = val;
-//     return EXIT_SUCCESS;
-//   };
-// };
+//                                  TODO fix the names of all stuff.
+//                                  It is all over the place.
 
 class VectorArea2D{
-  // TODO replace field_arr with valarray at some point.
+  // 2X2 Array of vectors /////////////////////////////////////////////////////
 public :
   unsigned int w;
   unsigned int h;
@@ -53,8 +32,6 @@ public :
   };
   VectorArea2D(int width, int height) {initialize(width,height);};
   void AreaPrint();
-  // float** &operator[](int i) { return field_arr[i]; };
-  // void AreaLenghtPrint(); //FIXME segmentation error
   std::valarray<double> GetVectorLenght();
   void PrintVectorLenght();
   float GetValue(int i, int j, int d) const {return field_arr[i][j][d];};
@@ -67,28 +44,24 @@ public:
   int x,y; // Positional arguments
   float pow_coeff;
   bool is_perp;
-  // ~Source(){};
-  // Source(int x_pos, int y_pos, float power, bool i_perp, float space_coeff,
-  //        int ooepsilon) {
-  //   initialize(x_pos, y_pos, power, i_perp, space_coeff, ooepsilon);
-  // };
   void initialize(int x_pos, int y_pos, float power,
                   bool i_perp, float space_coeff,
                   int ooepsilon) {
-    x = x_pos;
-    y = y_pos;
-    pow_coeff = power;
-    is_perp = i_perp;
+    x = x_pos; // X pos
+    y = y_pos; // Y pos
+    pow_coeff = power; // Power coefficent. Can be negative.
+    is_perp = i_perp; // if true will create perpendecular vector.
     n = ooepsilon * sqrt(fabs(power) * space_coeff); // Number of points to calculate
   };
-  void calculate_effect(VectorArea2D area, float space_coeff);
+  void calculate_effect(VectorArea2D area, float space_coeff); // Calculate effect. Will add on to the passed area.
 };
 
 class SourcePlane{
+  // A class to hold and do calculations with sources. ////////////////////////
 public:
   int num_of_sources = 0;
-  Source* Sources;
-  void add_source(int x, int y, float power,bool is_perp, float space_coeff, int ooepsilon);
+  Source* Sources; // Pointer to array of sources.
+  void add_source(int x, int y, float power,bool is_perp, float space_coeff, int ooepsilon); // Add an source
   VectorArea2D calculate_effect_vectors(int w, int h, float space_coeff);
 };
 
@@ -96,15 +69,15 @@ class ConstantSpace {
   // TODO make an exception at the places with sources. Dont calculate
   // anything there.
 public:
-  int w, h;
-  float x_bias, y_bias;
-  float DivCoeff;  // An coefficent between 1 and 16
-  float CurlCoeff; // An coefficent between 1 and 16
+  int w, h; // Width and height of given space.
+  float x_bias, y_bias; //Unaffected normal values of x and values.
+  float DivCoeff;  // An coefficent to calculate perpenducal sources.
+  float CurlCoeff; // An coefficent to calculate straight sources.
   int ooeps; // 1/Epsilon, how precise you want your calculations to be.
-  SourcePlane Sources;
+  SourcePlane Sources; // Sources.
   ConstantSpace(int width, int height, float x_bis, float y_bias,
                       float div_coeff, float curl_coeff, int one_over_epsilon);
-  VectorArea2D get_changefield();
+  VectorArea2D get_changefield(); //Get Change Vector Field
   void add_div_source(int x, int y, float pow){
     Sources.add_source(x, y, pow, false, DivCoeff, ooeps);
   };
@@ -114,10 +87,11 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-//                                Functions //
+//                                Functions                                  //
 ///////////////////////////////////////////////////////////////////////////////
 
 void VectorArea2D::AreaPrint() {
+  // Print the vector space.
   std::cout << w << "x" << h << std::endl;
   for (int i = 0; i < w; i++) {
     for (int j = 0; j < h; j++) {
@@ -160,9 +134,7 @@ void VectorArea2D::PrintVectorLenght(){
 void Source::calculate_effect(VectorArea2D area, float space_coeff) {
   // We calculate one quarter than add it to difference places since there is
   // symmetry. //
-  // std::cout << space_coeff << "," << pow_coeff << std::endl;
   const float max = space_coeff * pow_coeff; // Maximum it can be.
-  // std::cout << max << std::endl;
   for (int r = 1; r <= n; r++) {   // we don't calculate r=0
     for (int k = 0; k <= r; k++) { // we also skip one axis since skipped axis
                                    // will be calculated by rotation.
@@ -181,7 +153,9 @@ void Source::calculate_effect(VectorArea2D area, float space_coeff) {
       };
       const int x_pos_off = k;       // x position offset.
       const int y_pos_off = (r - k); // y position offset.
-      if (x_pos_off == 0){
+      // Another lame implementation.
+      // This time it is the implementation putting our values to coordinate quarters.
+      if (x_pos_off == 0){ 
         const int yp_pos = y + y_pos_off;
         if (yp_pos < area.h) {
           area.field_arr[x][yp_pos][0] += f_x;
@@ -245,16 +219,7 @@ VectorArea2D SourcePlane::calculate_effect_vectors(int w, int h, float space_coe
 };
 
 VectorArea2D ConstantSpace::get_changefield() {
-  // VectorArea2D ResDiv =
   return Sources.calculate_effect_vectors(w, h, DivCoeff); // result div
-  // VectorArea2D ChangeField(w, h);
-  // for (int i = 0; i < w; i++) {
-  //   for (int j = 0; j < h; j++) {
-  //     ChangeField.field_arr[i][j][0] = ResDiv.field_arr[i][j][0];
-  //     ChangeField.field_arr[i][j][1] = ResDiv.field_arr[i][j][1];
-  //   };
-  // };
-  // return ChangeField;
 };
 
 ConstantSpace::ConstantSpace(int width, int height, float x_b, float y_b,
